@@ -15,10 +15,5 @@
             "src": "/(.*)",
             "dest": "/server.cjs"
         }
-    ],
-    "functions": {
-        "server.cjs": {
-            "includeFiles": "**"
-        }
-    }
+    ]
 }
