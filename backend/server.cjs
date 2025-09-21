@@ -18,7 +18,10 @@ app.use(cors({
       'http://localhost:5173',
       'http://localhost:3001',
       process.env.FRONTEND_URL,
-      'https://*.vercel.app'
+      'https://*.vercel.app',
+      'https://v-web-frontend-flame.vercel.app',
+      'https://v-web-frontend-s8pe.vercel.app',
+      /\.vercel\.app$/ // Allow any vercel subdomain
     ].filter(Boolean);
 
     if (allowedOrigins.indexOf(origin) !== -1 ||
