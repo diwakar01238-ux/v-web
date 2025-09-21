@@ -2,14 +2,14 @@
     "version": 2,
     "builds": [
         {
-            "src": "backend/server.cjs",
+            "src": "server.cjs",
             "use": "@vercel/node"
         }
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
-            "dest": "backend/server.cjs",
+            "src": "/(.*)",
+            "dest": "/server.cjs",
             "methods": [
                 "GET",
                 "POST",
@@ -20,5 +20,8 @@
                 "HEAD"
             ]
         }
-    ]
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
 }
