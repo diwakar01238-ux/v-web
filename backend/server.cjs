@@ -3,101 +3,214 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 
-// Use environment variables directly (Vercel provides these)
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const app = express();
 
-// Only use dotenv in development
+// Environment setup
+const NODE_ENV = process.env.NODE_ENV || 'development';
 if (NODE_ENV === 'development') {
   try {
-    console.log('hehe: dev');
+    console.log('Loading development environment variables');
     require('dotenv').config({ path: './config.env' });
-    console.log('Development environment variables loaded from config.env');
   } catch (error) {
     console.warn('config.env not found, using process environment variables');
   }
 }
 const ATLAS_URI = process.env.ATLAS_URI;
-const app = express();
-const PORT = process.env.PORT || 6002;
+const PORT = process.env.PORT || 6003;
 
-// Enhanced CORS for Vercel (allow your frontend domain)
+// CORS setup
 app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5173',
     'https://v-web-frontend-flame.vercel.app',
-    'https://v-web-frontend-s8pe.vercel.app'
+    'https://v-web-frontend-s8pe.vercel.app',
+    'https://v-web-frontend-gaci.vercel.app' // Add new frontend domain
   ],
   credentials: true
 }));
-
 app.use(express.json());
 
-// Enhanced Mongoose Connection Setup
+// MongoDB connection
 const connectDB = async () => {
-  try {
-    if (!ATLAS_URI) {
-      throw new Error('ATLAS_URI environment variable is not defined');
-    }
-
-    await mongoose.connect(ATLAS_URI, {
-      dbName: 'healthcare',
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
-      maxPoolSize: 10,
-      retryWrites: true,
-      w: 'majority'
-    });
-    console.log('MongoDB connected via Mongoose');
-  } catch (err) {
-    console.error('Mongoose connection error:', err);
-    // Don't exit process in serverless environment
-    if (NODE_ENV !== 'production') {
-      process.exit(1);
+  const maxRetries = 3;
+  let attempts = 0;
+  while (attempts < maxRetries) {
+    try {
+      if (!ATLAS_URI) {
+        throw new Error('ATLAS_URI environment variable is not defined');
+      }
+      await mongoose.connect(ATLAS_URI, {
+        dbName: 'healthcare',
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: 10,
+        retryWrites: true,
+        w: 'majority'
+      });
+      console.log('MongoDB connected via Mongoose');
+      return;
+    } catch (err) {
+      attempts++;
+      console.error(`Mongoose connection attempt ${attempts} failed:`, err.message);
+      if (attempts >= maxRetries) {
+        console.error('Max retries reached. Could not connect to MongoDB.');
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 };
 
-// Routes - Load with error handling (NO FALLBACK)
-const loadRoute = (routePath, routeName) => {
-  try {
-    const route = require(routePath);
-    app.use(`/api/${routeName}`, route);
-    console.log(`✓ Loaded route: /api/${routeName}`);
-    return true;
-  } catch (error) {
-    console.error(`✗ Failed to load route ${routeName}:`, error.message);
-    // NO FALLBACK - just log the error
-    return false;
-  }
-};
+// Explicitly load routes
+try {
+  const aboutRoute = require('./routes/about.cjs');
+  app.use('/api/about', aboutRoute);
+  console.log('✓ Loaded route: /api/about');
+} catch (error) {
+  console.error('✗ Failed to load route about:', error.message, error.stack);
+}
 
-// Load all routes
-loadRoute('./routes/about.cjs', 'about');
-loadRoute('./routes/collections.cjs', 'collections');
-loadRoute('./routes/services.cjs', 'services');
-loadRoute('./routes/hospitals.cjs', 'hospitals');
-loadRoute('./routes/procedureCosts.cjs', 'procedure-costs');
-loadRoute('./routes/patientOpinion.cjs', 'patient-opinions');
-loadRoute('./routes/faqs.cjs', 'faqs');
-loadRoute('./routes/assistance.cjs', 'assistance');
-loadRoute('./routes/doctor.cjs', 'doctors');
-loadRoute('./routes/treatments.cjs', 'treatments');
-loadRoute('./routes/doctorTreatments.cjs', 'doctor-treatment');
-loadRoute('./routes/hospitalTreatments.cjs', 'hospital-treatment');
-loadRoute('./routes/bookings.cjs', 'booking');
-loadRoute('./routes/admin.cjs', 'admin');
-loadRoute('./routes/language.cjs', 'language');
-loadRoute('./routes/headings.cjs', 'headings');
-loadRoute('./routes/blog.cjs', 'blogs');
-loadRoute('./routes/upload.cjs', 'upload');
-loadRoute('./routes/patient.cjs', 'patients');
+try {
+  const languageRoute = require('./routes/language.cjs');
+  app.use('/api/language', languageRoute);
+  console.log('✓ Loaded route: /api/language');
+} catch (error) {
+  console.error('✗ Failed to load route language:', error.message, error.stack);
+}
 
-// Serve static files
+try {
+  const collectionsRoute = require('./routes/collections.cjs');
+  app.use('/api/collections', collectionsRoute);
+  console.log('✓ Loaded route: /api/collections');
+} catch (error) {
+  console.error('✗ Failed to load route collections:', error.message, error.stack);
+}
+
+try {
+  const servicesRoute = require('./routes/services.cjs');
+  app.use('/api/services', servicesRoute);
+  console.log('✓ Loaded route: /api/services');
+} catch (error) {
+  console.error('✗ Failed to load route services:', error.message, error.stack);
+}
+
+try {
+  const hospitalsRoute = require('./routes/hospitals.cjs');
+  app.use('/api/hospitals', hospitalsRoute);
+  console.log('✓ Loaded route: /api/hospitals');
+} catch (error) {
+  console.error('✗ Failed to load route hospitals:', error.message, error.stack);
+}
+
+try {
+  const procedureCostsRoute = require('./routes/procedureCosts.cjs');
+  app.use('/api/procedure-costs', procedureCostsRoute);
+  console.log('✓ Loaded route: /api/procedure-costs');
+} catch (error) {
+  console.error('✗ Failed to load route procedure-costs:', error.message, error.stack);
+}
+
+try {
+  const patientOpinionsRoute = require('./routes/patientOpinion.cjs');
+  app.use('/api/patient-opinions', patientOpinionsRoute);
+  console.log('✓ Loaded route: /api/patient-opinions');
+} catch (error) {
+  console.error('✗ Failed to load route patient-opinions:', error.message, error.stack);
+}
+
+try {
+  const faqsRoute = require('./routes/faqs.cjs');
+  app.use('/api/faqs', faqsRoute);
+  console.log('✓ Loaded route: /api/faqs');
+} catch (error) {
+  console.error('✗ Failed to load route faqs:', error.message, error.stack);
+}
+
+try {
+  const assistanceRoute = require('./routes/assistance.cjs');
+  app.use('/api/assistance', assistanceRoute);
+  console.log('✓ Loaded route: /api/assistance');
+} catch (error) {
+  console.error('✗ Failed to load route assistance:', error.message, error.stack);
+}
+
+try {
+  const doctorsRoute = require('./routes/doctor.cjs');
+  app.use('/api/doctors', doctorsRoute);
+  console.log('✓ Loaded route: /api/doctors');
+} catch (error) {
+  console.error('✗ Failed to load route doctors:', error.message, error.stack);
+}
+
+try {
+  const treatmentsRoute = require('./routes/treatments.cjs');
+  app.use('/api/treatments', treatmentsRoute);
+  console.log('✓ Loaded route: /api/treatments');
+} catch (error) {
+  console.error('✗ Failed to load route treatments:', error.message, error.stack);
+}
+
+try {
+  const doctorTreatmentsRoute = require('./routes/doctorTreatments.cjs');
+  app.use('/api/doctor-treatment', doctorTreatmentsRoute);
+  console.log('✓ Loaded route: /api/doctor-treatment');
+} catch (error) {
+  console.error('✗ Failed to load route doctor-treatment:', error.message, error.stack);
+}
+
+try {
+  const hospitalTreatmentsRoute = require('./routes/hospitalTreatments.cjs');
+  app.use('/api/hospital-treatment', hospitalTreatmentsRoute);
+  console.log('✓ Loaded route: /api/hospital-treatment');
+} catch (error) {
+  console.error('✗ Failed to load route hospital-treatment:', error.message, error.stack);
+}
+
+try {
+  const bookingRoute = require('./routes/bookings.cjs');
+  app.use('/api/booking', bookingRoute);
+  console.log('✓ Loaded route: /api/booking');
+} catch (error) {
+  console.error('✗ Failed to load route booking:', error.message, error.stack);
+}
+
+try {
+  const adminRoute = require('./routes/admin.cjs');
+  app.use('/api/admin', adminRoute);
+  console.log('✓ Loaded route: /api/admin');
+} catch (error) {
+  console.error('✗ Failed to load route admin:', error.message, error.stack);
+}
+
+try {
+  const blogRoute = require('./routes/blog.cjs');
+  app.use('/api/blogs', blogRoute);
+  console.log('✓ Loaded route: /api/blogs');
+} catch (error) {
+  console.error('✗ Failed to load route blogs:', error.message, error.stack);
+}
+
+try {
+  const uploadRoute = require('./routes/upload.cjs');
+  app.use('/api/upload', uploadRoute);
+  console.log('✓ Loaded route: /api/upload');
+} catch (error) {
+  console.error('✗ Failed to load route upload:', error.message, error.stack);
+}
+
+try {
+  const patientsRoute = require('./routes/patient.cjs');
+  app.use('/api/patients', patientsRoute);
+  console.log('✓ Loaded route: /api/patients');
+} catch (error) {
+  console.error('✗ Failed to load route patients:', error.message, error.stack);
+}
+
+// Rest of server.cjs remains the same
 app.use(express.static('public'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
-// Health check with DB status
 app.get('/', (req, res) => {
   const dbStatus = mongoose.connection.readyState;
   res.json({
@@ -107,7 +220,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Additional health endpoint for Vercel
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState;
   res.json({
@@ -117,7 +229,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler for API routes
 app.use('/api/:unmatchedRoute', (req, res) => {
   res.status(404).json({
     error: 'API endpoint not found',
@@ -126,7 +237,6 @@ app.use('/api/:unmatchedRoute', (req, res) => {
   });
 });
 
-// Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Server Error:', error);
   res.status(500).json({
@@ -135,33 +245,29 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Vercel serverless function handler
 const handler = async (req, res) => {
-  // Connect to database if not already connected
   if (mongoose.connection.readyState !== 1) {
     try {
       await connectDB();
     } catch (error) {
-      console.error('Database connection failed in handler:', error);
+      console.error('Database connection failed in handler:', error.message, error.stack);
+      return res.status(500).json({
+        error: 'Database connection failed',
+        message: 'Please try again later'
+      });
     }
   }
-
-  // Pass the request to Express
   return app(req, res);
 };
 
-// For Vercel serverless functions
 module.exports = handler;
 
-// For local development, start the server normally
 if (NODE_ENV !== 'production') {
   const startServer = async () => {
     try {
       console.log('NODE:', NODE_ENV);
-      console.log('ATLAS_URI:', ATLAS_URI);
-
+      console.log('ATLAS_URI:', ATLAS_URI ? 'Set' : 'Not set');
       await connectDB();
-
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`Environment: ${NODE_ENV}`);
@@ -171,13 +277,10 @@ if (NODE_ENV !== 'production') {
       process.exit(1);
     }
   };
-
-  // Graceful shutdown for local development
   process.on('SIGINT', async () => {
     await mongoose.disconnect();
     console.log('Mongoose connection closed');
     process.exit(0);
   });
-
   startServer();
 }
