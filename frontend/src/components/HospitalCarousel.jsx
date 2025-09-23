@@ -66,7 +66,7 @@ const HospitalCarousel = () => { // Removed hospitals prop
         setLoading(false);
       }
     };
-
+    console.log('Language from hook:', language);
     fetchHospitals();
   }, [language]);
 
@@ -160,8 +160,8 @@ const HospitalCarousel = () => { // Removed hospitals prop
           <SectionHeading
             center={true}
             title={headings.title}
-subtitle={headings.sub}
-// description={headings.desc}
+            subtitle={headings.sub}
+          // description={headings.desc}
 
           />
           <div className="text-center text-gray-500 py-8">

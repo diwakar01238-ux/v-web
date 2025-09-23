@@ -83,7 +83,7 @@ export default function Services() {
 
       }
     }
-
+    
     fetchServices();
     fetchHeadings();
   }, [language]);

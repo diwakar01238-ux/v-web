@@ -13,13 +13,7 @@ import { useLanguage } from "../hooks/useLanguage";
 
 export default function Home() {
   const [language] = useLanguage();
-  // useEffect(() => {
-  //   if (!language) {
-  //     console.log('Language not yet available, skipping fetch');
-  //     return;
-  //   }
-  //   console.log(language)
-  // }, [language]);
+
 
   return (
     <div>
