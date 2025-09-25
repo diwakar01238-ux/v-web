@@ -90,22 +90,63 @@ const HospitalCarousel = () => {
     setCurrentCountryIndex(index);
   };
 
-  // Animation variants
-  const variants = {
+  // Container animation variants for the carousel
+  const containerVariants = {
     enter: (direction) => ({
       x: direction > 0 ? "100%" : "-100%",
-      opacity: 0.5,
+      opacity: 0,
+      y: 50,
     }),
     center: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.5 },
+      y: 0,
+      transition: {
+        x: { type: "spring", stiffness: 120, damping: 15 },
+        opacity: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+        y: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
     },
     exit: (direction) => ({
       x: direction < 0 ? "100%" : "-100%",
-      opacity: 0.5,
-      transition: { duration: 0.5 },
+      opacity: 0,
+      y: -50,
+      transition: {
+        x: { type: "spring", stiffness: 120, damping: 15 },
+        opacity: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+        y: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+      },
     }),
+  };
+
+  // Item animation variants for individual hospital cards
+  const itemVariants = {
+    enter: {
+      opacity: 0,
+      y: 20,
+      scale: 0.9,
+    },
+    center: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        opacity: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+        y: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+        scale: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      scale: 0.9,
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1],
+      },
+    },
   };
 
   // Loading state
@@ -244,14 +285,19 @@ const HospitalCarousel = () => {
             <motion.div
               key={currentCountryIndex}
               custom={direction}
-              variants={variants}
+              variants={containerVariants}
               initial="enter"
               animate="center"
               exit="exit"
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
               {currentHospitals.map((hospital) => (
-                <HospitalCard key={hospital._id} hospital={hospital} />
+                <motion.div
+                  key={hospital._id}
+                  variants={itemVariants}
+                >
+                  <HospitalCard hospital={hospital} />
+                </motion.div>
               ))}
             </motion.div>
           </AnimatePresence>
