@@ -21,15 +21,25 @@ const PORT = process.env.PORT || 6003;
 // CORS setup
 app.use(cors({
   origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://v-web-frontend-flame.vercel.app',
-    'https://v-web-frontend-s8pe.vercel.app',
-    'https://v-web-frontend-gaci.vercel.app',
-    'https://v-web-frontend-beta.vercel.app' // Add new frontend domain
+    "http://localhost:3000",
+    "http://localhost:5173",
+
+    // Active frontend domains
+    "https://v-web-five.vercel.app",
+
+    // Other valid deployments you used
+    "https://v-web-frontend-flame.vercel.app",
+    "https://v-web-frontend-s8pe.vercel.app",
+    "https://v-web-frontend-gaci.vercel.app",
+    "https://v-web-frontend-beta.vercel.app"
   ],
+  methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+// Handle OPTIONS preflight for all routes
+app.options("*", cors());
 app.use(express.json());
 
 // MongoDB connection
